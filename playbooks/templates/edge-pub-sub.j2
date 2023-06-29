@@ -1,0 +1,32 @@
+router lisp
+ locator-table default
+ locator-set {{host_name}}
+  IPv4-interface Loopback0 priority 10 weight 10
+  auto-discover-rlocs
+  exit-locator-set
+ locator default-set {{host_name}}
+
+
+ service ipv4
+  encapsulation vxlan
+  {% for ip in control_plane_loopbacks -%}
+  itr map-resolver {{ ip }}
+  etr map-server {{ ip }} key {{ key }}
+  etr map-server {{ ip }}  proxy-reply
+  {% endfor -%}
+  etr
+  sgt
+  no map-cache away-eids send-map-request
+  proxy-itr {{ loopback0_interface_ip }} 
+  exit-service-ipv4
+  
+
+ service ethernet
+  {% for ip in control_plane_loopbacks -%}
+  itr map-resolver {{ ip }}
+  itr
+  etr map-server {{ ip }} key {{ key }}
+  etr map-server {{ ip }} proxy-reply
+  {% endfor -%}
+  etr
+  exit-service-ethernet

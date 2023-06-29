@@ -1,0 +1,65 @@
+{% for instance_id, instance in l3_instances.items() %}
+vrf definition {{ instance.vrf }}
+ rd 1:{{ instance_id }}
+ !
+ address-family ipv4
+  import ipv4 unicast map global
+  export ipv4 unicast map {{ instance.vrf }}
+  route-target export 1:{{ instance_id }}
+  route-target import 1:{{ instance_id }}
+ exit-address-family
+!
+
+{% endfor % }
+
+{% set number = 10 %}
+{% for instance_id, instance in l3_instances.items() %}
+{% for l2_instance in instance.l2 %}
+ip prefix-list {{ instance.vrf }} seq {{ number }} permit {{ l2_instance.network_prefix }} le 32
+{% endfor % }
+{% set number = number + 5 %}
+{% endfor % }
+
+
+{% for instance_id, instance in l3_instances.items() %}
+route-map {{ instance.vrf }} permit 10
+ match ip address prefix-list {{ instance.vrf }}
+route-map {{ instance.vrf }} deny 20
+{% endfor % }
+
+ip prefix-list global seq 10 permit 0.0.0.0/1 ge 2 le 32
+
+route-map global permit 10
+ match ip address prefix-list global
+
+interface {{handoff_interface}}.{{ handoff_vlan }}
+ description handoff to fusion
+ encapsulation dot1q {{handoff_vlan}}
+ vrf forwarding {{ vrf_name }}
+ ip address {{ handoff_ip_address | ansible.utils.ipaddr('address') }} {{ handoff_ip_address | ansible.utils.ipaddr('netmask') }}
+ no ip redirects
+ ip route-cache same-interface
+
+router bgp {{ fusion_bgp_as }}
+ bgp router-id interface Loopback0
+ bgp log-neighbor-changes
+ bgp graceful-restart
+ !
+
+ address-family ipv4 vrf {{ vrf_name }}
+  {% for handoff_ip_remote in border_addresses -%}
+  neighbor {{ handoff_ip_remote }} remote-as {{ border_bgp_as }}
+  neighbor {{ handoff_ip_remote }} update-source {{handoff_interface}}.{{ handoff_vlan }}
+  neighbor {{ handoff_ip_remote }} activate
+  {% endfor -%}
+ exit-address-family
+
+
+ip dhcp excluded-address vrf {{ vrf_name}} {{ network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr(dhcp_excluded_lower) }}  {{ network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr(dhcp_excluded_upper) }}
+!
+ip dhcp pool {{ vrf_name }}
+ vrf {{ vrf_name }}
+ network {{ network_prefix | ansible.utils.ipaddr('address') }} {{ network_prefix | ansible.utils.ipaddr('netmask') }}
+ default-router {{ layer3_gateway  }}
+
+ip dhcp use vrf remote

@@ -1,0 +1,18 @@
+---
+- name: Create directory for configs
+  ansible.builtin.file:
+    path: "files/{{inventory_hostname}}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+
+- name: Create border config
+  ansible.builtin.template:
+    src: templates/border-l2-l3-overlay.j2
+    dest: 'files/{{inventory_hostname}}/border-l2-l3-overlay.conf'
+  delegate_to: localhost
+
+# - name: Create border config in device
+#   cisco.ios.ios_config:
+#     src: templates/border-l2-l3-overlay.j2
+#     save_when: never

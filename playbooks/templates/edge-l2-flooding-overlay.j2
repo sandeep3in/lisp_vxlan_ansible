@@ -1,0 +1,11 @@
+router lisp
+{% for instance_id, instance in l3_instances.items() %}
+{% for l2_instance in instance.l2 %}
+ instance-id {{ l2_instance.instance_id }}
+  service ethernet
+   eid-table vlan {{ l2_instance.vlan }}
+   broadcast-underlay 239.0.17.4
+   flood unknown-unicast
+
+{% endfor %}
+{% endfor %}

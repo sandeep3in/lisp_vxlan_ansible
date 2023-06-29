@@ -1,0 +1,39 @@
+ansible_connection: ansible.netcommon.network_cli
+ansible_user: netadmin
+ansible_password: Dnac123!
+ansible_become: yes
+ansible_become_method: enable
+ansible_network_os: cisco.ios.ios
+key: Cisco # Authentication key for authenticating the map server.
+dhcp_excluded_lower: 1
+dhcp_excluded_upper: 50
+border_bgp_as: 65001
+fusion_bgp_as: 65000
+
+l3_instances:
+  4099:
+    vrf: VN1
+    l2:
+      - instance_id: 8188
+        vlan: 1024
+        mac_address: 0000.0c9f.f821
+        gateway: 192.168.2.1
+        dhcp_server_address: 192.168.2.2
+        network_prefix: 192.168.2.0/24
+      - instance_id: 8189
+        vlan: 1025
+        mac_address: 0000.0c9f.f822
+        gateway: 192.168.3.1
+        dhcp_server_address: 192.168.3.2
+        network_prefix: 192.168.3.0/24
+
+  4100:
+    vrf: VN2
+    l2:
+      - instance_id: 8190
+        vlan: 1026
+        mac_address: 0000.0c9f.f823
+        gateway: 192.168.4.1
+        dhcp_server_address: 192.168.4.2
+        network_prefix: 192.168.4.0/24
+

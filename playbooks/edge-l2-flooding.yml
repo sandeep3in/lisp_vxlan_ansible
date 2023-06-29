@@ -1,0 +1,19 @@
+---
+- name: Create directory for configs
+  ansible.builtin.file:
+    path: "files/{{inventory_hostname}}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+
+- name: Create L2 flooding overlay config
+  ansible.builtin.template:
+    src: templates/edge-l2-flooding-overlay.j2
+    dest: 'files/{{inventory_hostname}}/edge-l2-flooding-overlay.conf'
+  delegate_to: localhost
+
+# - name: Create L2 flooding overlay config in device
+#   cisco.ios.ios_config:
+#     src: templates/l2-flooding-overlay.j2
+#     save_when: never
+

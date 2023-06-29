@@ -1,0 +1,44 @@
+- name: Configure overlay
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Configure Border L2/L3 Overlay
+      ansible.builtin.include_tasks:
+        file: border-l2-l3-overlay.yml
+      when: border is defined and border is true
+
+    - name: Configure Pub/Sub for Border
+      ansible.builtin.include_tasks:
+        file: border-pub-sub.yml
+      when: border is defined and border is true
+
+    - name: Configure Border External
+      ansible.builtin.include_tasks:
+        file: border-external.yml
+      when: border is defined and border is true
+
+    - name: Configure Border BGP
+      ansible.builtin.include_tasks:
+        file: border-bgp.yml
+      when: border is defined and border is true
+
+    - name: Configure Edge L2/L3 Overlay
+      ansible.builtin.include_tasks:
+        file: edge-l2-l3-overlay.yml
+      when: edge is defined and edge is true
+
+    - name: Configure Edge L2 Flooding on overlay
+      ansible.builtin.include_tasks:
+        file: edge-l2-flooding.yml
+      when: edge is defined and edge is true
+
+    - name: Configure Pub/Sub for Edge
+      ansible.builtin.include_tasks:
+        file: edge-pub-sub.yml
+      when: edge is defined and edge is true
+
+    - name: Configure Fusion BGP
+      ansible.builtin.include_tasks:
+        file: fusion-bgp.yml
+      when: fusion is defined and fusion is true

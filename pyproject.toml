@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "vxlan-lisp"
+version = "0.1.0"
+description = ""
+authors = ["Jose Bogarin <jbogarin@cloverhound.com>"]
+readme = "README.md"
+packages = [{include = "vxlan_lisp"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+ansible = "^7.4.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

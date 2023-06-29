@@ -1,0 +1,55 @@
+router lisp
+
+ locator-set {{host_name}}
+  IPv4-interface Loopback0 priority 10 weight 10
+  auto-discover-rlocs
+  exit-locator-set
+ !
+ locator default-set {{host_name}}
+
+  service ipv4
+    encapsulation vxlan
+    map-cache publications
+    {% for ip in control_plane_loopbacks -%}
+    import publication publisher {{ ip }}
+    itr map-resolver {{ ip }}
+    etr map-server {{ ip }} key {{key}}
+    {% endfor -%}
+
+    {% for ip in control_plane_loopbacks -%}
+    etr map-server {{ ip }} proxy-reply
+    {% endfor -%}
+    etr
+    sgt
+    route-export publications
+    distance publications 250
+    proxy-etr
+    {% for ip in control_plane_loopbacks -%}
+    proxy-itr {{ ip }}
+    {% endfor -%}
+    map-server
+    map-resolver
+    exit-service-ipv4
+
+{% for instance_id, instance in l3_instances.items() %}
+  instance-id {{ instance_id }} 
+    remote-rloc-probe on-route-change
+    service ipv4
+     eid-table vrf {{ instance.vrf }}
+     sgt distribution
+     sgt
+     exit-service-ipv4
+    !
+    exit-instance-id
+   !
+
+  site site_uci
+    description map-server configured from Cisco DNA-Center
+    authentication-key 7 {{key}}
+    eid-record instance-id {{ instance_id }} 0.0.0.0/0 accept-more-specifics
+{% for l2_instance in instance.l2 %}
+    eid-record instance-id {{ instance_id }} {{ l2_instance.network_prefix }} accept-more-specifics
+{% endfor %}
+
+{% endfor %}  
+

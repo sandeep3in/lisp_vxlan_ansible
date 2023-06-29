@@ -1,0 +1,36 @@
+{% for instance_id, instance in l3_instances.items() %}
+vrf definition {{ instance.vrf }}
+ rd 1:{{ instance_id }}
+ !
+ address-family ipv4
+  route-target export 1:{{ instance_id }}
+  route-target import 1:{{ instance_id }}
+ exit-address-family
+
+{% endfor %}
+
+{% for instance_id, instance in l3_instances.items() %}
+{% for l2_instance in instance.l2 %}
+interface Loopback{{ l2_instance.vlan }}
+ description Loopback Border interface
+ vrf forwarding {{ instance.vrf }}
+ ip address {{ l2_instance.gateway }} 255.255.255.255
+end
+
+{% endfor %}
+{% endfor %}
+
+router lisp 
+  site site_uci
+    authentication-key {{key}}
+{% for instance_id, instance in l3_instances.items() %}
+{% for l2_instance in instance.l2 %}
+    eid-record instance-id {{ instance_id }} {{ l2_instance.network_prefix }}  accept-more-specifics
+{% endfor %}
+{% endfor %}
+{% for instance_id, instance in l3_instances.items() %}
+{% for l2_instance in instance.l2 %}
+    eid-record instance-id {{ l2_instance.instance_id }} any-mac
+{% endfor %}
+{% endfor %}
+

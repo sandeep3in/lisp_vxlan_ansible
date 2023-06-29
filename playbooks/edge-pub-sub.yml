@@ -1,0 +1,34 @@
+---
+- name: Create directory for configs
+  ansible.builtin.file:
+    path: "files/{{inventory_hostname}}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+
+- name: Define Mobility name
+  ansible.builtin.set_fact:
+    host_name: "{{ansible_facts['net_hostname']}}_rloc"
+
+- ansible.builtin.set_fact:
+    control_plane_loopbacks: []
+
+- name: Gather loopback interface IP
+  ansible.builtin.set_fact:
+    control_plane_loopbacks: "{{ control_plane_loopbacks + [hostvars[item].loopback0_interface_ip] }}"
+  loop: "{{ groups['all'] }}"
+  when: hostvars[item].control_plane is defined
+
+- ansible.builtin.debug:
+    var: control_plane_loopbacks
+
+- name: Create Edge Pub/Sub config
+  ansible.builtin.template:
+    src: templates/edge-pub-sub.j2
+    dest: 'files/{{inventory_hostname}}/edge-pub-sub.conf'
+  delegate_to: localhost
+
+# - name: Create Edge Pub/Sub config in device
+#   cisco.ios.ios_config:
+#     src: templates/edge-pub-sub.j2
+#     save_when: never

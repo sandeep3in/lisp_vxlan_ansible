@@ -1,0 +1,29 @@
+---
+- name: Show version
+  hosts: all
+  gather_facts: true
+
+  tasks:
+  # - name: Print hostname
+  #   ansible.builtin.debug:
+  #     msg: "{{ansible_facts['net_hostname'] }}"
+
+  # - name: Define Mobility name
+  #   ansible.builtin.set_fact:
+  #     host_name: "{{ansible_facts['net_hostname']}}_rloc"
+  #     mobility_name: "Mob_{{ network_prefix |  ansible.utils.ipv4('network') | replace('.', '-') }}"
+
+  - name: Gather facts
+    cisco.ios.ios_facts:
+      gather_subset: all
+    register: my_facts
+
+  - name: Debug facts
+    ansible.builtin.debug:
+      # msg: "{{my_facts.ansible_facts.ansible_net_interfaces }}"
+      msg: "{{my_facts.ansible_facts}}"
+
+  # - name: Debug Mobility Name
+  #   ansible.builtin.debug:
+  #     msg: "{{host_name}} {{mobility_name}}"
+

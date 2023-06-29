@@ -1,0 +1,15 @@
+router lisp
+
+ locator-set default_etr_locator
+  IPv4-interface Loopback0 priority 10 weight 10
+  exit-locator-set
+ 
+{% for instance_id, instance in l3_instances.items() %} 
+ instance-id {{instance_id}}
+  service ipv4
+   database-mapping 0.0.0.0/0 locator-set default_etr_locator default-etr local
+
+ site site_uci
+   allow-locator-default-etr instance-id {{ instance_id }} ipv4
+
+{% endfor %}

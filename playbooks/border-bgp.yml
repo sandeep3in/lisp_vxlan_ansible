@@ -1,0 +1,28 @@
+---
+- name: Create directory for configs
+  ansible.builtin.file:
+    path: "files/{{inventory_hostname}}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+
+- name: Gather fusion facts
+  ansible.builtin.set_fact:
+    fusion_vrfs : []
+
+- name: Gather fusion facts
+  ansible.builtin.set_fact:
+    fusion_vrfs: "{{ fusion_vrfs + [hostvars[item].vrfs ] }}"
+  loop: "{{ groups['all'] }}"
+  when: hostvars[item].fusion is defined
+
+- name: Create border BGP config
+  ansible.builtin.template:
+    src: templates/border-bgp.j2
+    dest: 'files/{{inventory_hostname}}/border-bgp.conf'
+  delegate_to: localhost
+
+# - name: Create border BGP config in device
+#   cisco.ios.ios_config:
+#     src: templates/border-bgp.j2
+#     save_when: never

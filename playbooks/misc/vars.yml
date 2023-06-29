@@ -1,0 +1,27 @@
+---
+- name: Vars
+  hosts: all
+  gather_facts: false
+
+  tasks:
+  - name: Edge Role
+    ansible.builtin.debug:
+      msg: "Edge"
+    when: edge is defined and edge == true
+
+  - name: Border Role
+    ansible.builtin.debug:
+      msg: "Border"
+    when: border is defined and border == true
+
+  - name: Control Plane Role
+    ansible.builtin.debug:
+      msg: "Control Plane"
+    when: control_plane is defined and control_plane == true
+
+  - name: print loopback interface IP
+    debug:
+      var: hostvars[item].loopback0_interface_ip
+    loop: "{{ groups['all'] }}"
+    when: hostvars[item].edge is defined
+

@@ -1,0 +1,91 @@
+{% for instance_id, instance in l3_instances.items() %}
+vrf definition {{ instance.vrf }}
+ !
+ address-family ipv4
+ exit-address-family
+
+{% endfor %}
+
+{% for instance_id, instance in l3_instances.items() %}
+{% for l2_instance in instance.l2 %}
+vlan {{ l2_instance.vlan }}
+ !
+{% endfor %}
+
+{% endfor %}
+
+
+{% for instance_id, instance in l3_instances.items() %}
+{% for l2_instance in instance.l2 %}
+interface Vlan{{l2_instance.vlan}}
+ mac-address {{l2_instance.mac_address}}
+ vrf forwarding {{instance.vrf}}
+ ip address {{l2_instance.gateway}} {{l2_instance.network_prefix | ansible.utils.ipaddr('netmask') }}
+ ip helper-address {{l2_instance.dhcp_server_address}} 
+ no ip redirects
+ ip pim passive
+ ip route-cache same-interface
+ ip igmp version 3
+ ip igmp explicit-tracking
+ no lisp mobility liveness test
+ lisp mobility Mob_{{ l2_instance.network_prefix |  ansible.utils.ipv4('network') | replace('.', '-') }}
+end
+
+{% endfor %}
+{% endfor %}
+
+device-tracking policy IPDT_POLICY
+ tracking enable
+exit
+
+
+ip dhcp relay information option
+{% for instance_id, instance in l3_instances.items() %}
+{% for l2_instance in instance.l2 %}
+ ip dhcp snooping vlan {{ l2_instance.vlan }}
+{% endfor %}
+{% endfor %}
+ ip dhcp snooping
+end
+
+router lisp
+ locator-table default
+ locator-set {{host_name}}
+  IPv4-interface Loopback0 priority 10 weight 10
+  auto-discover-rlocs
+  exit-locator-set
+ locator default-set {{host_name}}
+
+{% for instance_id, instance in l3_instances.items() %}
+ instance-id {{instance_id}}
+  remote-rloc-probe on-route-change
+{% for l2_instance in instance.l2 %}
+  dynamic-eid Mob_{{ l2_instance.network_prefix |  ansible.utils.ipv4('network') | replace('.', '-') }}
+   database-mapping {{ l2_instance.network_prefix }} locator-set {{host_name}}
+   exit-dynamic-eid
+  !
+{% endfor %}
+
+  service ipv4
+   eid-table vrf {{ instance.vrf  }}
+   map-cache 0.0.0.0/0 map-request
+   sgt distribution
+   sgt
+   exit-service-ipv4
+
+{% endfor %}
+ 
+{% for instance_id, instance in l3_instances.items() %}
+{% for l2_instance in instance.l2 %}
+ instance-id {{ l2_instance.instance_id }}
+  remote-rloc-probe on-route-change
+  service ethernet
+   eid-table vlan {{ l2_instance.vlan }}
+   database-mapping mac locator-set {{host_name}}
+   exit-service-ethernet
+  !
+  exit-instance-id
+
+{% endfor %}
+{% endfor %}
+ 

@@ -1,0 +1,12 @@
+loopback0_interface_ip: 192.168.200.3 # Loopback interface ip address
+vrfs:
+    - vrf: VN1
+      handoffs:
+        - handoff_vlan: 2020
+          handoff_ip_address: 192.168.220.2/30
+          handoff_interface_local: TenGigabitEthernet 1/0/1
+    - vrf: VN2
+      handoffs:
+        - handoff_vlan: 2021
+          handoff_ip_address:  192.168.220.6/30
+          handoff_interface_local: TenGigabitEthernet 1/0/1
