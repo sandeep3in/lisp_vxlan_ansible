@@ -16,7 +16,7 @@
     dest: 'files/{{inventory_hostname}}/edge-l2-l3-overlay.conf'
   delegate_to: localhost
 
-# - name: Create edge overlay config in device
-#   cisco.ios.ios_config:
-#     src: templates/edge-l2-l3-overlay.j2
-#     save_when: never
+- name: Create edge overlay config in device
+  cisco.ios.ios_config:
+    src: templates/edge-l2-l3-overlay.j2
+    save_when: never

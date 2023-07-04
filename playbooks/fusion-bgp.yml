@@ -22,11 +22,11 @@
   delegate_to: localhost
   when: type == "switch"
 
-# - name: Create fusion BGP config in device for switch
-#   cisco.ios.ios_config:
-#     src: templates/fusion-bgp.j2
-#     save_when: never
-#   when: type == "switch"
+- name: Create fusion BGP config in device for switch
+  cisco.ios.ios_config:
+    src: templates/fusion-bgp.j2
+    save_when: never
+  when: type == "switch"
 
 - name: Create fusion BGP config for router
   ansible.builtin.template:
@@ -35,10 +35,10 @@
   delegate_to: localhost
   when: type == "router"
 
-# - name: Create fusion BGP config in device for router
-#   cisco.ios.ios_config:
-#     src: templates/fusion-bgp-router.j2
-#     save_when: never
-#   when: type == "router"
+- name: Create fusion BGP config in device for router
+  cisco.ios.ios_config:
+    src: templates/fusion-bgp-router.j2
+    save_when: never
+  when: type == "router"
 
 

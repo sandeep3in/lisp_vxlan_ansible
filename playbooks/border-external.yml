@@ -9,10 +9,10 @@
 - name: Create external border config
   ansible.builtin.template:
     src: templates/border-dynamic-external.j2
-    dest: 'files/{{inventory_hostname}}/border-external.conf'
+    dest: 'files/{{inventory_hostname}}/border-dynamic-external.conf'
   delegate_to: localhost
 
-# - name: Create external border config in device
-#   cisco.ios.ios_config:
-#     src: templates/dynamic-external-border.j2
-#     save_when: never
+- name: Create external border config in device
+  cisco.ios.ios_config:
+    src: templates/border-dynamic-external.j2
+    save_when: never
