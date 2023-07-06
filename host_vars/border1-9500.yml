@@ -9,7 +9,7 @@ vrfs:
         - handoff_vlan: 2021
           handoff_ip_address: 192.168.220.6/30
           handoff_interface_local: TenGigabitEthernet 1/0/2
-          remote_device: fusion1-isr4452
+          remote_device: fusion2-isr4451
     - vrf: VN2
       handoffs:
         - handoff_vlan: 2022
