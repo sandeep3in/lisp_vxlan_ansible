@@ -16,3 +16,4 @@
   cisco.ios.ios_config:
     src: templates/border-dynamic-external.j2
     save_when: never
+  when: not skip_deploy | bool

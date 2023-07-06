@@ -1,0 +1,9 @@
+---
+- hosts: all
+  gather_facts: false
+  tasks:
+  - name: Capitalize a string
+    debug:
+      msg: "{{ my_string | flatten_vrfs }}"
+  vars:
+    my_string: "this is a string"

@@ -19,9 +19,6 @@
   loop: "{{ groups['all'] }}"
   when: hostvars[item].control_plane is defined
 
-- ansible.builtin.debug:
-    var: control_plane_loopbacks
-
 - name: Create Edge Pub/Sub config
   ansible.builtin.template:
     src: templates/edge-pub-sub.j2
@@ -32,3 +29,4 @@
   cisco.ios.ios_config:
     src: templates/edge-pub-sub.j2
     save_when: never
+  when: not skip_deploy | bool

@@ -1,22 +1,22 @@
-type: router
+type: switch
 vrfs:
   - vrf: VN1
     handoffs:
-      - handoff_ip_address: 192.168.220.1/30
+      - handoff_ip_address: 192.168.221.1/30
         handoff_vlan: 2020
         handoff_interface: GigabitEthernet0/0/2
         remote_device: border1-9500
-      - handoff_ip_address: 192.168.220.13/30
+      - handoff_ip_address: 192.168.221.13/30
         handoff_vlan: 2023
         handoff_interface: GigabitEthernet0/0/3
         remote_device: border2-9500
   - vrf: VN2
     handoffs:
-      - handoff_ip_address: 192.168.220.9/30
+      - handoff_ip_address: 192.168.221.9/30
         handoff_vlan: 2022
         handoff_interface: GigabitEthernet0/0/4
         remote_device: border1-9500
-      - handoff_ip_address: 192.168.220.21/30
+      - handoff_ip_address: 192.168.221.21/30
         handoff_vlan: 2025
         handoff_interface: GigabitEthernet0/0/5
         remote_device: border2-9500

@@ -16,4 +16,5 @@
   cisco.ios.ios_config:
     src: templates/edge-l2-flooding-overlay.j2
     save_when: never
+  when: not skip_deploy | bool
 

@@ -5,40 +5,25 @@
     mode: '0755'
   delegate_to: localhost
 
-- name: Gather fusion facts
+- name: Creating Border VRFs variable
   ansible.builtin.set_fact:
     borders_vrfs: []
 
-- name: Gather fusion facts
+- name: Gathering Border VRFs
   ansible.builtin.set_fact:
     borders_vrfs: "{{ borders_vrfs + [hostvars[item].vrfs] }}"
   loop: "{{ groups['all'] }}"
   when: hostvars[item].border is defined
 
-- name: Create fusion BGP config for switch
+- name: Create fusion BGP config
   ansible.builtin.template:
     src: templates/fusion-bgp.j2
     dest: 'files/{{inventory_hostname}}/fusion-bgp.conf'
   delegate_to: localhost
-  when: type == "switch"
 
-- name: Create fusion BGP config in device for switch
+- name: Create fusion BGP config in device
   cisco.ios.ios_config:
     src: templates/fusion-bgp.j2
     save_when: never
-  when: type == "switch"
-
-- name: Create fusion BGP config for router
-  ansible.builtin.template:
-    src: templates/fusion-bgp-router.j2
-    dest: 'files/{{inventory_hostname}}/fusion-bgp.conf'
-  delegate_to: localhost
-  when: type == "router"
-
-- name: Create fusion BGP config in device for router
-  cisco.ios.ios_config:
-    src: templates/fusion-bgp-router.j2
-    save_when: never
-  when: type == "router"
-
-
+  when: 
+    - not skip_deploy | bool

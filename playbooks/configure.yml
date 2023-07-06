@@ -1,6 +1,8 @@
 - name: Configure overlay
   hosts: all
   gather_facts: true
+  vars:
+    - skip_deploy: false
 
   tasks:
     - name: Configure Border L2/L3 Overlay

@@ -8,11 +8,11 @@
 
 - name: Gather fusion facts
   ansible.builtin.set_fact:
-    fusion_vrfs : []
+    fusions_vrfs : []
 
 - name: Gather fusion facts
   ansible.builtin.set_fact:
-    fusion_vrfs: "{{ fusion_vrfs + [hostvars[item].vrfs ] }}"
+    fusions_vrfs: "{{ fusions_vrfs + [hostvars[item].vrfs ] }}"
   loop: "{{ groups['all'] }}"
   when: hostvars[item].fusion is defined
 
@@ -26,3 +26,4 @@
   cisco.ios.ios_config:
     src: templates/border-bgp.j2
     save_when: never
+  when: not skip_deploy | bool

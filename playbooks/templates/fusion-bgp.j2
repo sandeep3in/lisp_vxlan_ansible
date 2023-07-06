@@ -31,17 +31,36 @@ ip prefix-list global seq 10 permit 0.0.0.0/1 ge 2 le 32
 route-map global permit 10
  match ip address prefix-list global
 
+{% if type == "switch" %}
 {% for fusion_vrf in vrfs %}
 {% for fusion_vrf_handoff in fusion_vrf.handoffs %}
 interface Vlan{{  fusion_vrf_handoff.handoff_vlan }}
- description handoff to border
+ description handoff to Border
  vrf forwarding {{ fusion_vrf.vrf }}
  ip address {{ fusion_vrf_handoff.handoff_ip_address | ansible.utils.ipaddr('address') }} {{ fusion_vrf_handoff.handoff_ip_address | ansible.utils.ipaddr('netmask') }}
  no ip redirects
  ip route-cache same-interface
-{% endfor %}
 
 {% endfor %}
+{% endfor %}
+{% endif %}
+
+
+
+{% if type == "router" %}
+{% for fusion_vrf in vrfs %}
+{% for fusion_vrf_handoff in fusion_vrf.handoffs %}
+interface {{ fusion_vrf_handoff.handoff_interface }}.{{ fusion_vrf_handoff.handoff_vlan }}
+ description handoff to Border
+ encapsulation dot1q {{ fusion_vrf_handoff.handoff_vlan }}
+ vrf forwarding {{ fusion_vrf.vrf }}
+ ip address {{ fusion_vrf_handoff.handoff_ip_address | ansible.utils.ipaddr('address') }} {{ fusion_vrf_handoff.handoff_ip_address | ansible.utils.ipaddr('netmask') }}
+ no ip redirects
+ ip route-cache same-interface
+
+{% endfor %}
+{% endfor %}
+{% endif %}
 
 router bgp {{ fusion_bgp_as }}
  bgp router-id interface Loopback0
@@ -49,22 +68,23 @@ router bgp {{ fusion_bgp_as }}
  bgp graceful-restart
  !
 
-{% for border_vrfs in borders_vrfs %}
-{% for border_vrf in border_vrfs %}
- address-family ipv4 vrf {{ border_vrf.vrf }}
-{% for border_vrf_handoff in border_vrf.handoffs %}
-{% set handoff_ip_remote = border_vrf_handoff.handoff_ip_address | ansible.utils.ipaddr('address')  %}
+{% set border_vrfs = borders_vrfs | flatten_vrfs %}
+{% for vrf, handoffs in border_vrfs.items() %}
+ address-family ipv4 vrf {{ vrf }}
+{% for handoff in handoffs %}
+{% if handoff.remote_device == inventory_hostname %}
+{% set handoff_ip_remote = handoff.handoff_ip_address | ansible.utils.ipaddr('address')  %}
   neighbor {{ handoff_ip_remote }} remote-as {{ border_bgp_as }}
-  neighbor {{ handoff_ip_remote }} update-source Vlan{{ border_vrf_handoff.handoff_vlan }}
+  neighbor {{ handoff_ip_remote }} update-source Vlan{{ handoff.handoff_vlan }}
   neighbor {{ handoff_ip_remote }} activate
   neighbor {{ handoff_ip_remote }} default-originate
+{% endif %}
 {% endfor %}
  exit-address-family
 
 {% endfor %}
 
-{% endfor %}
-
+{% if type == "switch" %}
 {% for fusion_vrf in vrfs %}
 {% for fusion_vrf_handoff in fusion_vrf.handoffs %}
 interface {{ fusion_vrf_handoff.handoff_interface }}
@@ -72,22 +92,24 @@ interface {{ fusion_vrf_handoff.handoff_interface }}
 
 {% endfor %}
 {% endfor %}
+{% endif %}
 
 {% for instance_id, instance in l3_instances.items() %}
 {% for l2_instance in instance.l2 %}
-ip dhcp excluded-address vrf {{ instance.vrf }} {{ l2_instance.network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr(dhcp_excluded_lower) }}  {{ l2_instance.network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr(dhcp_excluded_upper) }}
+ip dhcp excluded-address vrf {{ instance.vrf  }} {{ l2_instance.network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr(dhcp_excluded_lower) | regex_replace('\/\d+',' ')  }} {{ l2_instance.network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr(dhcp_excluded_upper) | regex_replace('\/\d+',' ')  }}
 {% endfor %}
 {% endfor %}
 
 
 {% for instance_id, instance in l3_instances.items() %}
 {% for l2_instance in instance.l2 %}
-ip dhcp pool {{ instance.vrf }}
- vrf {{ instance.vrf }}
- network {{ l2_instance.network_prefix | ansible.utils.ipaddr('address') }} {{ l2_instance.network_prefix | ansible.utils.ipaddr('netmask') }}
- default-router {{ l2_instance.gateway }}
+ip dhcp pool {{ instance.vrf  }}
+ vrf {{ instance.vrf  }}
+ network {{ l2_instance.network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr('0') | regex_replace('\/\d+',' ')  }} {{ l2_instance.network_prefix | ansible.utils.ipaddr('netmask')  }}
+ default-router {{ l2_instance.gateway  }}
 
 {% endfor %}
 {% endfor %}
+
 
 ip dhcp use vrf remote

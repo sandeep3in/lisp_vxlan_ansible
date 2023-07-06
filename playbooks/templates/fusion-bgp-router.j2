@@ -10,35 +10,38 @@ vrf definition {{ instance.vrf }}
  exit-address-family
 !
 
-{% endfor % }
+{% endfor %}
 
-{% set number = 10 %}
 {% for instance_id, instance in l3_instances.items() %}
 {% for l2_instance in instance.l2 %}
-ip prefix-list {{ instance.vrf }} seq {{ number }} permit {{ l2_instance.network_prefix }} le 32
-{% endfor % }
-{% set number = number + 5 %}
-{% endfor % }
+ip prefix-list {{ instance.vrf }} seq 10 permit {{ l2_instance.network_prefix }} le 32
+{% endfor %}
+{% endfor %}
 
 
 {% for instance_id, instance in l3_instances.items() %}
-route-map {{ instance.vrf }} permit 10
+route-map {{ instance.vrf}} permit 10
  match ip address prefix-list {{ instance.vrf }}
 route-map {{ instance.vrf }} deny 20
-{% endfor % }
+
+{% endfor %}
 
 ip prefix-list global seq 10 permit 0.0.0.0/1 ge 2 le 32
 
 route-map global permit 10
  match ip address prefix-list global
 
-interface {{handoff_interface}}.{{ handoff_vlan }}
- description handoff to fusion
- encapsulation dot1q {{handoff_vlan}}
- vrf forwarding {{ vrf_name }}
- ip address {{ handoff_ip_address | ansible.utils.ipaddr('address') }} {{ handoff_ip_address | ansible.utils.ipaddr('netmask') }}
+{% for fusion_vrf in vrfs %}
+{% for fusion_vrf_handoff in fusion_vrf.handoffs %}
+interface Vlan{{  fusion_vrf_handoff.handoff_vlan }}
+ description handoff to border
+ vrf forwarding {{ fusion_vrf.vrf }}
+ ip address {{ fusion_vrf_handoff.handoff_ip_address | ansible.utils.ipaddr('address') }} {{ fusion_vrf_handoff.handoff_ip_address | ansible.utils.ipaddr('netmask') }}
  no ip redirects
  ip route-cache same-interface
+{% endfor %}
+
+{% endfor %}
 
 router bgp {{ fusion_bgp_as }}
  bgp router-id interface Loopback0
@@ -46,20 +49,48 @@ router bgp {{ fusion_bgp_as }}
  bgp graceful-restart
  !
 
- address-family ipv4 vrf {{ vrf_name }}
-  {% for handoff_ip_remote in border_addresses -%}
+{% for border_vrfs in borders_vrfs %}
+{% for border_vrf in border_vrfs %}
+ address-family ipv4 vrf {{ border_vrf.vrf }}
+{% for border_vrf_handoff in border_vrf.handoffs %}
+{% if border_vrf_handoff.remote_device == inventory_hostname %}
+{% set handoff_ip_remote = border_vrf_handoff.handoff_ip_address | ansible.utils.ipaddr('address')  %}
   neighbor {{ handoff_ip_remote }} remote-as {{ border_bgp_as }}
-  neighbor {{ handoff_ip_remote }} update-source {{handoff_interface}}.{{ handoff_vlan }}
+  neighbor {{ handoff_ip_remote }} update-source Vlan{{ border_vrf_handoff.handoff_vlan }}
   neighbor {{ handoff_ip_remote }} activate
-  {% endfor -%}
+  neighbor {{ handoff_ip_remote }} default-originate
+{% endif %}
+{% endfor %}
  exit-address-family
 
+{% endfor %}
 
-ip dhcp excluded-address vrf {{ vrf_name}} {{ network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr(dhcp_excluded_lower) }}  {{ network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr(dhcp_excluded_upper) }}
-!
-ip dhcp pool {{ vrf_name }}
- vrf {{ vrf_name }}
- network {{ network_prefix | ansible.utils.ipaddr('address') }} {{ network_prefix | ansible.utils.ipaddr('netmask') }}
- default-router {{ layer3_gateway  }}
+{% endfor %}
+
+{% for fusion_vrf in vrfs %}
+{% for fusion_vrf_handoff in fusion_vrf.handoffs %}
+interface {{ fusion_vrf_handoff.handoff_interface }}
+ switchport mode trunk
+
+{% endfor %}
+{% endfor %}
+
+{% for instance_id, instance in l3_instances.items() %}
+{% for l2_instance in instance.l2 %}
+ip dhcp excluded-address vrf {{ instance.vrf  }} {{ l2_instance.network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr(dhcp_excluded_lower) | regex_replace('\/\d+',' ')  }} {{ l2_instance.network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr(dhcp_excluded_upper) | regex_replace('\/\d+',' ')  }}
+{% endfor %}
+{% endfor %}
+
+
+{% for instance_id, instance in l3_instances.items() %}
+{% for l2_instance in instance.l2 %}
+ip dhcp pool {{ instance.vrf  }}
+ vrf {{ instance.vrf  }}
+ network {{ l2_instance.network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr('0') | regex_replace('\/\d+',' ')  }} {{ l2_instance.network_prefix | ansible.utils.ipaddr('netmask')  }}
+ default-router {{ l2_instance.gateway  }}
+
+{% endfor %}
+{% endfor %}
+
 
 ip dhcp use vrf remote

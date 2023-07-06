@@ -39,25 +39,26 @@ router bgp {{ border_bgp_as }}
 {% endif %}
 {% endfor %}
    redistribute lisp metric 10 route-map LISP_TO_BGP
-{% for fusion_vrf in fusion_vrfs  %}
-{% for fvrf in fusion_vrf  %}
-{% if fvrf.vrf == vrf.vrf %}
-{% for handoff in fvrf.handoffs %}
-{% set ipaddress = handoff.handoff_ip_address | ansible.utils.ipaddr('address') %} 
+{%- set fusion_vrfs = fusions_vrfs | flatten_vrfs -%}
+{% for f_vrf, handoffs in fusion_vrfs.items() %}
+{%- if f_vrf == vrf.vrf -%}
+{% for handoff in handoffs %}
+{%- set ipaddress = handoff.handoff_ip_address | ansible.utils.ipaddr('address') -%} 
+{% if handoff.remote_device == inventory_hostname %}
    neighbor {{ ipaddress }} remote-as {{ fusion_bgp_as }}
    neighbor {{ ipaddress }} update-source {{ handoff.handoff_vlan }}
    neighbor {{ ipaddress }} activate
    neighbor {{ ipaddress }} send-community both
    neighbor {{ ipaddress }} weight 65535
-  exit-address-family
-{% endfor %}
 {% endif %}
 {% endfor %}
+  exit-address-family
+{% endif %}
+{% endfor %}
+
 {% endfor %}
   !
 !
-
-{% endfor %}
 
 route-map LISP_TO_BGP permit 10
  description AS-number tag
