@@ -75,7 +75,11 @@ router bgp {{ fusion_bgp_as }}
 {% if handoff.remote_device == inventory_hostname %}
 {% set handoff_ip_remote = handoff.handoff_ip_address | ansible.utils.ipaddr('address')  %}
   neighbor {{ handoff_ip_remote }} remote-as {{ border_bgp_as }}
+{% if type == "switch" %}
   neighbor {{ handoff_ip_remote }} update-source Vlan{{ handoff.handoff_vlan }}
+{% elif type == "router" %}
+  neighbor {{ handoff_ip_remote }} update-source {{handoff.handoff_interface_remote}}.{{ handoff.handoff_vlan }}
+{% endif %}
   neighbor {{ handoff_ip_remote }} activate
   neighbor {{ handoff_ip_remote }} default-originate
 {% endif %}
