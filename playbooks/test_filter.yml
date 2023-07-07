@@ -4,6 +4,4 @@
   tasks:
   - name: Capitalize a string
     debug:
-      msg: "{{ my_string | flatten_vrfs }}"
-  vars:
-    my_string: "this is a string"
+      msg: "{{ lookup('check_interface', vlan=2020) }}"

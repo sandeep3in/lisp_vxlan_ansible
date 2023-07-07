@@ -78,7 +78,7 @@ router bgp {{ fusion_bgp_as }}
 {% if type == "switch" %}
   neighbor {{ handoff_ip_remote }} update-source Vlan{{ handoff.handoff_vlan }}
 {% elif type == "router" %}
-  neighbor {{ handoff_ip_remote }} update-source {{handoff.handoff_interface_remote}}.{{ handoff.handoff_vlan }}
+  neighbor {{ handoff_ip_remote }} update-source {{ lookup('check_interface', vlan=handoff.handoff_vlan)}}.{{ handoff.handoff_vlan }}
 {% endif %}
   neighbor {{ handoff_ip_remote }} activate
   neighbor {{ handoff_ip_remote }} default-originate
