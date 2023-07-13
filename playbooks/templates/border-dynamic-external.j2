@@ -9,6 +9,10 @@ router lisp
   service ipv4
    database-mapping 0.0.0.0/0 locator-set default_etr_locator default-etr local
 
+{% endfor %}
+
+{% for instance_id, instance in l3_instances.items() %}
+
  site site_uci
    allow-locator-default-etr instance-id {{ instance_id }} ipv4
 

@@ -43,7 +43,7 @@ router bgp {{ border_bgp_as }}
 {% for f_vrf, handoffs in fusion_vrfs.items() %}
 {%- if f_vrf == vrf.vrf -%}
 {% for handoff in handoffs %}
-{%- set ipaddress = handoff.handoff_ip_address | ansible.utils.ipaddr('address') -%} 
+{%- set ipaddress = handoff.handoff_ip_address | ansible.utils.ipaddr('address') -%}
 {% if handoff.remote_device == inventory_hostname %}
    neighbor {{ ipaddress }} remote-as {{ fusion_bgp_as }}
    neighbor {{ ipaddress }} update-source Vlan {{ handoff.handoff_vlan }}
@@ -54,6 +54,17 @@ router bgp {{ border_bgp_as }}
 {% endfor %}
   exit-address-family
 {% endif %}
+{% else %}
+{% for handoff in vrf.handoffs %}
+{% set ipaddress = handoff.handoff_ip_address | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') %} 
+   neighbor {{ ipaddress }} remote-as {{ fusion_bgp_as }}
+   neighbor {{ ipaddress }} update-source Vlan {{ handoff.handoff_vlan }}
+   neighbor {{ ipaddress }} activate
+   neighbor {{ ipaddress }} send-community both
+   neighbor {{ ipaddress }} weight 65535
+{% endfor %}
+  exit-address-family
+
 {% endfor %}
 
 {% endfor %}

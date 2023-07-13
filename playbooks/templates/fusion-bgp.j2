@@ -34,6 +34,9 @@ route-map global permit 10
 {% if type == "switch" %}
 {% for fusion_vrf in vrfs %}
 {% for fusion_vrf_handoff in fusion_vrf.handoffs %}
+
+Vlan {{  fusion_vrf_handoff.handoff_vlan }}
+
 interface Vlan{{  fusion_vrf_handoff.handoff_vlan }}
  description handoff to Border
  vrf forwarding {{ fusion_vrf.vrf }}
@@ -107,7 +110,7 @@ ip dhcp excluded-address vrf {{ instance.vrf  }} {{ l2_instance.network_prefix |
 
 {% for instance_id, instance in l3_instances.items() %}
 {% for l2_instance in instance.l2 %}
-ip dhcp pool {{ instance.vrf  }}
+ip dhcp pool {{ l2_instance.vlan  }}
  vrf {{ instance.vrf  }}
  network {{ l2_instance.network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr('0') | regex_replace('\/\d+',' ')  }} {{ l2_instance.network_prefix | ansible.utils.ipaddr('netmask')  }}
  default-router {{ l2_instance.gateway  }}
