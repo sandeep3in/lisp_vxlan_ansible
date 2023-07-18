@@ -87,6 +87,7 @@ dhcp_excluded_lower: 1
 dhcp_excluded_upper: 50
 border_bgp_as: 65015 # BGP AS number of the border node
 fusion_bgp_as: 65005 # BGP AS number of the fusion  node
+configure_fusion_dhcp: true
 
 # defintions of L3 and L2 instances
 l3_instances:
