@@ -107,7 +107,7 @@ ip dhcp excluded-address vrf {{ instance.vrf  }} {{ l2_instance.network_prefix |
 {% endfor %}
 {% endfor %}
 
-
+{% if configure_fusion_dhcp %}
 {% for instance_id, instance in l3_instances.items() %}
 {% for l2_instance in instance.l2 %}
 ip dhcp pool {{ l2_instance.vlan  }}
@@ -117,6 +117,7 @@ ip dhcp pool {{ l2_instance.vlan  }}
 
 {% endfor %}
 {% endfor %}
+{% endif %}
 
 
 ip dhcp use vrf remote

@@ -7,8 +7,10 @@ ansible_network_os: cisco.ios.ios
 key: Cisco # Authentication key for authenticating the map server.
 dhcp_excluded_lower: 1
 dhcp_excluded_upper: 50
+configure_fusion_dhcp: true
 border_bgp_as: 65001
 fusion_bgp_as: 65000
+
 
 l3_instances:
   4099:

@@ -1,7 +1,0 @@
----
-- hosts: all
-  gather_facts: false
-  tasks:
-  - name: Capitalize a string
-    debug:
-      msg: "{{ lookup('check_interface', vlan=2020) }}"
