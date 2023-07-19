@@ -1,0 +1,19 @@
+---
+- name: Create directory for configs
+  ansible.builtin.file:
+    path: "files/{{inventory_hostname}}"
+    state: directory
+    mode: '0755'
+  delegate_to: localhost
+
+- name: Create Edge interfaces config
+  ansible.builtin.template:
+    src: templates/edge-interfaces.j2
+    dest: 'files/{{inventory_hostname}}/edge-interfaces.conf'
+  delegate_to: localhost
+
+- name: Deploy Edge interfaces config to device
+  cisco.ios.ios_config:
+    src: templates/edge-interfaces.j2
+    save_when: never
+  when: not skip_deploy | bool

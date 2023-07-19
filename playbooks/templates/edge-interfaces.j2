@@ -1,0 +1,7 @@
+{% for interface in interfaces %}
+interface {{ interface.interface }}
+  switchport access vlan {{ interface.vlan }}
+  switchport mode access
+  spanning-tree portfast
+
+{% endfor %}

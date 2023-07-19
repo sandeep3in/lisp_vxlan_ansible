@@ -40,6 +40,11 @@
         file: edge-pub-sub.yml
       when: edge is defined and edge is true
 
+    - name: Configure Edge Interfaces
+      ansible.builtin.include_tasks:
+        file: edge-interfaces.yml
+      when: edge is defined and edge is true
+
     - name: Configure Fusion BGP
       ansible.builtin.include_tasks:
         file: fusion-bgp.yml

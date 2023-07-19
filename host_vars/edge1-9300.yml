@@ -1,1 +1,8 @@
 loopback0_interface_ip: 192.168.200.5 # Loopback interface ip address
+interfaces:
+  - interface: GigabitEthernet1/0/4
+    vlan: 30
+  - interface: GigabitEthernet1/0/1
+    vlan: 10
+  - interface: GigabitEthernet1/0/7-10
+    vlan: 20

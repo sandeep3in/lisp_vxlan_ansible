@@ -12,9 +12,11 @@ vrf definition {{ instance.vrf }}
 
 {% endfor %}
 
+{% set prefix_count = namespace(value=10) %}
 {% for instance_id, instance in l3_instances.items() %}
 {% for l2_instance in instance.l2 %}
-ip prefix-list {{ instance.vrf }} seq 10 permit {{ l2_instance.network_prefix }} le 32
+ip prefix-list {{ instance.vrf }} seq {{prefix_count.value}} permit {{ l2_instance.network_prefix }} le 32
+{% set prefix_count.value = prefix_count.value + 10 %}
 {% endfor %}
 {% endfor %}
 
