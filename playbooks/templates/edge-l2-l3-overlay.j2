@@ -1,9 +1,11 @@
 {% for instance_id, instance in l3_instances.items() %}
+{% if instance.vrf not in ('grt',  'GRT',  'default') %}
 vrf definition {{ instance.vrf }}
  !
  address-family ipv4
  exit-address-family
 
+{% endif %}
 {% endfor %}
 
 {% for instance_id, instance in l3_instances.items() %}
@@ -19,7 +21,9 @@ vlan {{ l2_instance.vlan }}
 {% for l2_instance in instance.l2 %}
 interface Vlan{{l2_instance.vlan}}
  mac-address {{l2_instance.mac_address}}
+{% if instance.vrf not in ('grt',  'GRT',  'default') %}
  vrf forwarding {{instance.vrf}}
+{%- endif %} 
  ip address {{l2_instance.gateway}} {{l2_instance.network_prefix | ansible.utils.ipaddr('netmask') }}
  ip helper-address {{l2_instance.dhcp_server_address}} 
  no ip redirects
@@ -67,10 +71,14 @@ router lisp
 {% endfor %}
 
   service ipv4
+{% if instance.vrf not in ('grt',  'GRT',  'default') %}
    eid-table vrf {{ instance.vrf  }}
    map-cache 0.0.0.0/0 map-request
    sgt distribution
    sgt
+{% else %}   
+   eid-table default
+{% endif %}
    exit-service-ipv4
 
 {% endfor %}

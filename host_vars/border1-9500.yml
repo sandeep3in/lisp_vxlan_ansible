@@ -1,18 +1,18 @@
 loopback0_interface_ip: 192.168.200.3 # Loopback interface ip address
 vrfs:
-    - vrf: VN1
+    - vrf: GRT
       handoffs:
         - handoff_vlan: 2020
-          handoff_ip_address: 192.168.220.2/30
+          handoff_prefix: 192.168.220.0/30
           handoff_interface: TenGigabitEthernet 1/0/1
           remote_device: fusion1-isr4451
         - handoff_vlan: 2021
-          handoff_ip_address: 192.168.220.6/30
+          handoff_prefix: 192.168.220.4/30
           handoff_interface: TenGigabitEthernet 1/0/2
           remote_device: fusion2-isr4451
     - vrf: VN2
       handoffs:
         - handoff_vlan: 2022
-          handoff_ip_address:  192.168.220.10/30
+          handoff_prefix:  192.168.220.8/30
           handoff_interface: TenGigabitEthernet 1/0/3
           remote_device: fusion1-isr4451

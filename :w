@@ -11,10 +11,8 @@ vlan {{ handoff.handoff_vlan }}
 {% set local_ipaddress = handoff.handoff_prefix | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') %} 
 interface Vlan{{ handoff.handoff_vlan }}
  description handoff to fusion
-{%- if vrf.vrf not in ('grt', 'GRT', 'default') %} 
  vrf forwarding {{ vrf.vrf }}
-{%- endif %} 
- ip address {{ local_ipaddress }} {{ handoff.handoff_prefix | ansible.utils.ipaddr('netmask') }}
+ ip address {{ handoff.handoff_ip_address | ansible.utils.ipaddr('address') }} {{ handoff.handoff_ip_address | ansible.utils.ipaddr('netmask') }}
  no ip redirects
  ip route-cache same-interface
 
@@ -28,14 +26,10 @@ router bgp {{ border_bgp_as }}
  !
 
 {% for vrf in vrfs %}
-{%- if vrf.vrf not in ('grt', 'GRT', 'default') %} 
   address-family ipv4 vrf {{ vrf.vrf }}
-{% else %}
-  address-family ipv4
-{% endif %}
    bgp aggregate-timer 0
 {% for handoff in vrf.handoffs %}
-   network {{ handoff.handoff_prefix |  ansible.utils.ipaddr('network')  }} mask {{ handoff.handoff_prefix |  ansible.utils.ipaddr('netmask')  }}
+   network {{ handoff.handoff_ip_address |  ansible.utils.ipaddr('network')  }} mask {{ handoff.handoff_ip_address |  ansible.utils.ipaddr('netmask')  }}
 {% endfor %}
 {% for instance_id, instance in l3_instances.items() %}
 {% if instance.vrf == vrf.vrf %}
@@ -46,8 +40,24 @@ router bgp {{ border_bgp_as }}
 {% endif %}
 {% endfor %}
    redistribute lisp metric 10 route-map LISP_TO_BGP
-{%- for handoff in vrf.handoffs %}
-{%- set neighbor_ipaddress = handoff.handoff_prefix | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') %} 
+{% set fusion_vrfs = fusions_vrfs | flatten_vrfs %}
+{% for f_vrf, handoffs in fusion_vrfs.items() %}
+{%- if f_vrf == vrf.vrf -%}
+{% for handoff in handoffs %}
+{%- set ipaddress = handoff.handoff_ip_address | ansible.utils.ipaddr('address') -%}
+{% if handoff.remote_device == inventory_hostname %}
+   neighbor {{ ipaddress }} remote-as {{ fusion_bgp_as }}
+   neighbor {{ ipaddress }} update-source Vlan {{ handoff.handoff_vlan }}
+   neighbor {{ ipaddress }} activate
+   neighbor {{ ipaddress }} send-community both
+   neighbor {{ ipaddress }} weight 65535
+{% endif %}
+{% endfor %}
+  exit-address-family
+{% endif %}
+{% else %}
+{% for handoff in vrf.handoffs %}
+{% set neighbor_ipaddress = handoff.handoff_ip_address | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') %} 
    neighbor {{ neighbor_ipaddress }} remote-as {{ fusion_bgp_as }}
    neighbor {{ neighbor_ipaddress }} update-source Vlan {{ handoff.handoff_vlan }}
    neighbor {{ neighbor_ipaddress }} activate
@@ -55,6 +65,8 @@ router bgp {{ border_bgp_as }}
    neighbor {{ neighbor_ipaddress }} weight 65535
 {% endfor %}
   exit-address-family
+
+{% endfor %}
 
 {% endfor %}
   !

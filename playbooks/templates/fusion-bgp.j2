@@ -1,4 +1,5 @@
 {% for instance_id, instance in l3_instances.items() %}
+{% if instance.vrf not in ('grt', 'GRT', 'default') %} 
 vrf definition {{ instance.vrf }}
  rd 1:{{ instance_id }}
  !
@@ -10,6 +11,7 @@ vrf definition {{ instance.vrf }}
  exit-address-family
 !
 
+{% endif %}
 {% endfor %}
 
 {% set prefix_count = namespace(value=10) %}
@@ -41,8 +43,11 @@ Vlan {{  fusion_vrf_handoff.handoff_vlan }}
 
 interface Vlan{{  fusion_vrf_handoff.handoff_vlan }}
  description handoff to Border
+{%- if fusion_vrf.vrf not in ('grt', 'GRT', 'default') %} 
  vrf forwarding {{ fusion_vrf.vrf }}
- ip address {{ fusion_vrf_handoff.handoff_ip_address | ansible.utils.ipaddr('address') }} {{ fusion_vrf_handoff.handoff_ip_address | ansible.utils.ipaddr('netmask') }}
+{%- endif %}
+{%- set local_ipaddress = fusion_vrf_handoff.handoff_prefix | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') %} 
+ ip address {{ local_ipaddress }} {{ fusion_vrf_handoff.handoff_prefix | ansible.utils.ipaddr('netmask') }}
  no ip redirects
  ip route-cache same-interface
 
@@ -50,16 +55,17 @@ interface Vlan{{  fusion_vrf_handoff.handoff_vlan }}
 {% endfor %}
 {% endif %}
 
-
-
 {% if type == "router" %}
 {% for fusion_vrf in vrfs %}
 {% for fusion_vrf_handoff in fusion_vrf.handoffs %}
 interface {{ fusion_vrf_handoff.handoff_interface }}.{{ fusion_vrf_handoff.handoff_vlan }}
  description handoff to Border
  encapsulation dot1q {{ fusion_vrf_handoff.handoff_vlan }}
+{%- if fusion_vrf.vrf not in ('grt', 'GRT', 'default') %} 
  vrf forwarding {{ fusion_vrf.vrf }}
- ip address {{ fusion_vrf_handoff.handoff_ip_address | ansible.utils.ipaddr('address') }} {{ fusion_vrf_handoff.handoff_ip_address | ansible.utils.ipaddr('netmask') }}
+{%- endif %}
+{%- set local_ipaddress = fusion_vrf_handoff.handoff_prefix | ansible.utils.ipaddr('1') | ansible.utils.ipaddr('address') %} 
+ ip address {{ local_ipaddress }} {{ fusion_vrf_handoff.handoff_prefix | ansible.utils.ipaddr('netmask') }}
  no ip redirects
  ip route-cache same-interface
 
@@ -73,21 +79,22 @@ router bgp {{ fusion_bgp_as }}
  bgp graceful-restart
  !
 
-{% set border_vrfs = borders_vrfs | flatten_vrfs %}
-{% for vrf, handoffs in border_vrfs.items() %}
- address-family ipv4 vrf {{ vrf }}
-{% for handoff in handoffs %}
-{% if handoff.remote_device == inventory_hostname %}
-{% set handoff_ip_remote = handoff.handoff_ip_address | ansible.utils.ipaddr('address')  %}
-  neighbor {{ handoff_ip_remote }} remote-as {{ border_bgp_as }}
+{% for vrf in vrfs %}
+{%- if vrf.vrf not in ('grt', 'GRT', 'default') %} 
+ address-family ipv4 vrf {{ vrf.vrf }}
+{%- else %}
+ address-family ipv4
+{%- endif %}
+{%- for handoff in vrf.handoffs -%}
+{%- set neighbor_ipaddress = handoff.handoff_prefix | ansible.utils.ipaddr('2') | ansible.utils.ipaddr('address') %} 
+  neighbor {{ neighbor_ipaddress }} remote-as {{ border_bgp_as }}
 {% if type == "switch" %}
-  neighbor {{ handoff_ip_remote }} update-source Vlan{{ handoff.handoff_vlan }}
+  neighbor {{ neighbor_ipaddress }} update-source Vlan{{ handoff.handoff_vlan }}
 {% elif type == "router" %}
-  neighbor {{ handoff_ip_remote }} update-source {{ lookup('check_interface', vlan=handoff.handoff_vlan)}}.{{ handoff.handoff_vlan }}
+  neighbor {{ neighbor_ipaddress }} update-source {{ lookup('check_interface', vlan=handoff.handoff_vlan)}}.{{ handoff.handoff_vlan }}
 {% endif %}
-  neighbor {{ handoff_ip_remote }} activate
-  neighbor {{ handoff_ip_remote }} default-originate
-{% endif %}
+  neighbor {{ neighbor_ipaddress }} activate
+  neighbor {{ neighbor_ipaddress }} default-originate
 {% endfor %}
  exit-address-family
 
@@ -113,7 +120,9 @@ ip dhcp excluded-address vrf {{ instance.vrf  }} {{ l2_instance.network_prefix |
 {% for instance_id, instance in l3_instances.items() %}
 {% for l2_instance in instance.l2 %}
 ip dhcp pool {{ l2_instance.vlan  }}
+{%- if instance.vrf not in ('grt', 'GRT', 'default') %} 
  vrf {{ instance.vrf  }}
+{%- endif %} 
  network {{ l2_instance.network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr('0') | regex_replace('\/\d+',' ')  }} {{ l2_instance.network_prefix | ansible.utils.ipaddr('netmask')  }}
  default-router {{ l2_instance.gateway  }}
 

@@ -14,7 +14,7 @@ fusion_bgp_as: 65000
 
 l3_instances:
   4099:
-    vrf: VN1
+    vrf: GRT
     l2:
       - instance_id: 8188
         vlan: 1024
