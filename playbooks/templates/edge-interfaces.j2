@@ -1,7 +1,15 @@
 {% for interface in interfaces %}
-interface {{ interface.interface }}
+{% if  "-" in  interface.interface %}
+interface range {{ interface.interface }}
   switchport access vlan {{ interface.vlan }}
   switchport mode access
   spanning-tree portfast
 
+{%  else %}
+interface range {{ interface.interface }}
+  switchport access vlan {{ interface.vlan }}
+  switchport mode access
+  spanning-tree portfast
+
+{% endif %}
 {% endfor %}
