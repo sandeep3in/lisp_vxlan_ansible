@@ -30,7 +30,13 @@ route-map {{ instance.vrf }} deny 20
 
 {% endfor %}
 
-ip prefix-list global seq 10 permit 0.0.0.0/1 ge 2 le 32
+
+{% set seq_count = namespace(value=10) %}
+{% for prefix_list in grt_prefix %}
+ip prefix-list global seq {{ seq_count.value }} permit {{ prefix_list }} 
+{% set seq_count.value = seq_count.value + 10 %}
+{% endfor %}
+
 
 route-map global permit 10
  match ip address prefix-list global

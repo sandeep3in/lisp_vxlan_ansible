@@ -10,7 +10,9 @@ dhcp_excluded_upper: 50
 configure_fusion_dhcp: true
 border_bgp_as: 65001
 fusion_bgp_as: 65000
-
+grt_prefix:
+  - 1.1.1.0/24
+  - 1.1.2.0/24
 
 l3_instances:
   4099:
