@@ -116,13 +116,13 @@ interface {{ fusion_vrf_handoff.handoff_interface }}
 {% endfor %}
 {% endif %}
 
+{% if configure_fusion_dhcp %}
 {% for instance_id, instance in l3_instances.items() %}
 {% for l2_instance in instance.l2 %}
 ip dhcp excluded-address vrf {{ instance.vrf  }} {{ l2_instance.network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr(dhcp_excluded_lower) | regex_replace('\/\d+',' ')  }} {{ l2_instance.network_prefix | ansible.utils.ipaddr('net') | ansible.utils.ipaddr(dhcp_excluded_upper) | regex_replace('\/\d+',' ')  }}
 {% endfor %}
 {% endfor %}
 
-{% if configure_fusion_dhcp %}
 {% for instance_id, instance in l3_instances.items() %}
 {% for l2_instance in instance.l2 %}
 ip dhcp pool {{ l2_instance.vlan  }}
