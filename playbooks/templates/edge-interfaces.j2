@@ -6,7 +6,7 @@ interface range {{ interface.interface }}
   spanning-tree portfast
 
 {%  else %}
-interface range {{ interface.interface }}
+interface {{ interface.interface }}
   switchport access vlan {{ interface.vlan }}
   switchport mode access
   spanning-tree portfast
