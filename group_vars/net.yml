@@ -24,6 +24,9 @@ l3_instances:
         gateway: 192.168.2.1
         dhcp_server_address: 192.168.2.2
         network_prefix: 192.168.2.0/24
+        flooding: 
+          mgroup: 239.1.1.1
+          unknown_unicast_forwarding: false
       - instance_id: 8189
         vlan: 1025
         mac_address: 0000.0c9f.f822

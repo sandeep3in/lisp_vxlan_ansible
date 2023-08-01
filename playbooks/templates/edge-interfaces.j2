@@ -1,3 +1,4 @@
+{% if interfaces is defined %}
 {% for interface in interfaces %}
 {% if  "-" in  interface.interface %}
 interface range {{ interface.interface }}
@@ -13,3 +14,4 @@ interface {{ interface.interface }}
 
 {% endif %}
 {% endfor %}
+{% endif %}

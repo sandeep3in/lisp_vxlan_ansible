@@ -1,11 +1,15 @@
 router lisp
 {% for instance_id, instance in l3_instances.items() %}
 {% for l2_instance in instance.l2 %}
- instance-id {{ l2_instance.instance_id }}
-  service ethernet
-   eid-table vlan {{ l2_instance.vlan }}
-   broadcast-underlay 239.0.17.4
-   flood unknown-unicast
+instance-id {{ l2_instance.instance_id }}
+service ethernet
+eid-table vlan {{ l2_instance.vlan }}
+{% if l2_instance.flooding is defined -%}
+broadcast-underlay {{ l2_instance.flooding.mgroup | default('239.0.1.11')  }}
+{% if  l2_instance.flooding.unknown_unicast_forwarding  -%}
+flood unknown-unicast
+{% endif %}
+{% endif %}
 
 {% endfor %}
 {% endfor %}
