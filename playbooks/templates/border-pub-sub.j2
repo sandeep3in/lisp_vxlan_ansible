@@ -35,7 +35,11 @@ router lisp
   instance-id {{ instance_id }} 
     remote-rloc-probe on-route-change
     service ipv4
+{% if instance.vrf not in ('grt', 'GRT', 'default') %} 
      eid-table vrf {{ instance.vrf }}
+{% else %}
+     eid-table default
+{% endif %}
      sgt distribution
      sgt
      exit-service-ipv4
