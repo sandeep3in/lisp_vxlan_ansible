@@ -16,7 +16,7 @@ The playbook takes care of the following scenario:
 
 The following topology is supported and validated:
 
-![image](https://github.com/sandeep3in/lisp_vxlan_ansible/blob/main/DIY_fabric_ansible.jpg)
+![image](DIY_fabric_ansible.jpg)
 
 The border can be dual-homed to the fusion in a full mesh topology or it could be partial mesh between the fusion and the border node. The playbook supports and understands full mesh or partial mesh topology between the border and the fusion.
 
